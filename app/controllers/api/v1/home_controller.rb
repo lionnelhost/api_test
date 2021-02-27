@@ -10,7 +10,7 @@ module Api
                         "type": "git",
                         "url": "https://github.com/lionnelhost/api_test.git"
                       },
-                    "author": "Patrick",
+                    "author": "Patrick Lionnel",
                     "license": "MIT"
                 }
 
