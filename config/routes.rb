@@ -5,6 +5,8 @@ Rails.application.routes.draw do
       get '/home' => "home#index"
       resources :dish_types, only: [:index, :show]
       resources :dishes, only: [:index, :show]
+      resources :menus, only: [:index, :show]
+      resources :menu_items, only: [:index, :show]
     end
   end
 
