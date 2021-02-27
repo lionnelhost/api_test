@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     namespace 'v1' do
       get '/home' => "home#index"
       resources :dish_types, only: [:index, :show]
+      resources :dishes, only: [:index, :show]
     end
   end
 
