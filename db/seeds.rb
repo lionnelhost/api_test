@@ -8,13 +8,17 @@
 
 # CREATE DISHES TYPE
 
-Dish.delete_all
-DishType.delete_all 
+Menu.delete_all
+# Dish.delete_all
+# DishType.delete_all 
 
 
 
 # Load dish types
-load Rails.root.join("db/seeds/dish_types.rb")
+# load Rails.root.join("db/seeds/dish_types.rb")
 
 # laod dishes
-load Rails.root.join("db/seeds/dish.rb")
+# load Rails.root.join("db/seeds/dish.rb")
+
+# load Menu
+load Rails.root.join("db/seeds/menu.rb")
