@@ -11,6 +11,8 @@ Rails.application.routes.draw do
       resources :dishes, only: [:index, :show]
       resources :menus, only: [:index, :show]
       resources :menu_items, only: [:index, :show]
+      resources :users, only: [:index, :show]
+      resources :orders, only: [:index, :show]
     end
   end
   

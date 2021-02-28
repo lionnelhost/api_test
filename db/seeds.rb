@@ -8,7 +8,8 @@
 
 # CREATE DISHES TYPE
 
-User.delete_all
+# Order.delete_all
+# User.delete_all
 # MenuItem.delete_all
 # Menu.delete_all
 # Dish.delete_all
@@ -29,4 +30,7 @@ User.delete_all
 # load Rails.root.join("db/seeds/menu_item.rb")
 
 # load Users
-load Rails.root.join("db/seeds/user.rb")
+# load Rails.root.join("db/seeds/user.rb")
+
+# load Orders
+# load Rails.root.join("db/seeds/order.rb")
