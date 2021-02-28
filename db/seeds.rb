@@ -8,33 +8,33 @@
 
 # CREATE DISHES TYPE
 
-# Order.delete_all
-# Profile.delete_all
-# User.delete_all
-# MenuItem.delete_all
-# Menu.delete_all
-# Dish.delete_all
-# DishType.delete_all 
+Order.delete_all
+Profile.delete_all
+User.delete_all
+MenuItem.delete_all
+Menu.delete_all
+Dish.delete_all
+DishType.delete_all 
 
 
 
 # Load dish types
-# load Rails.root.join("db/seeds/dish_types.rb")
+load Rails.root.join("db/seeds/dish_types.rb")
 
 # laod dishes
-# load Rails.root.join("db/seeds/dish.rb")
+load Rails.root.join("db/seeds/dish.rb")
 
 # load Menu
-# load Rails.root.join("db/seeds/menu.rb")
+load Rails.root.join("db/seeds/menu.rb")
 
 # load Menu Items 
-# load Rails.root.join("db/seeds/menu_item.rb")
+load Rails.root.join("db/seeds/menu_item.rb")
 
 # load Users
-# load Rails.root.join("db/seeds/user.rb")
+load Rails.root.join("db/seeds/user.rb")
 
 # load Profile
-# load Rails.root.join("db/seeds/profile.rb")
+load Rails.root.join("db/seeds/profile.rb")
 
 # load Orders
-# load Rails.root.join("db/seeds/order.rb")
+load Rails.root.join("db/seeds/order.rb")
