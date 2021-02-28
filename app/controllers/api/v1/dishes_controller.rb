@@ -5,11 +5,16 @@ module Api
             def index 
                 @dishes = Dish.all
 
-                render json: @dishes
+                render status: :ok, json: @dishes.to_json(:include => {
+                    :dish_type => {:except => [:created_at, :updated_at]},
+                  }, :except => [:updated_at])
+                 
             end
 
             def show
-                render json: @dish
+                render status: :ok, json: @dish.to_json(:include => {
+                    :dish_type => {:except => [:created_at, :updated_at]},
+                  }, :except => [:updated_at])
             end
 
             private 

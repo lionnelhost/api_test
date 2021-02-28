@@ -5,11 +5,19 @@ module Api
             def index 
                 @menu_items = MenuItem.all
 
-                render json: @menu_items
+                render json: @menu_items.to_json(:include => {
+                    :dish => {:except => [:created_at, :updated_at]},
+                    :menu => {:only => [:date]}
+                  }, :except => [:updated_at])
             end
 
             def show
-                render json: @menu_item
+                render json: @menu_item.to_json(:include => {
+                    :dish => {:except => [:created_at, :updated_at]},
+                    :menu => {:only => [:date]}
+                  }, 
+                  :except => [:updated_at]
+                )
             end
 
             private 
