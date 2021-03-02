@@ -19,11 +19,11 @@ jobs:
       - image: circleci/ruby:2.7-node
         auth:
           username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference 
       - image: circleci/postgres:13.2-alpine
         auth:
           username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference 
     working_directory: ~/circleci-demo-workflows
     steps:
       - checkout
