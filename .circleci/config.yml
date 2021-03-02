@@ -35,10 +35,10 @@ jobs:
     executor: default
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - api_test-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-            - api_test-
+      # - restore_cache:
+      #     keys:
+      #       - api_test-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+      #       - api_test-
       - configure_bundler
       - run:
           name: Install bundle
