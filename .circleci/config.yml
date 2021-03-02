@@ -108,9 +108,7 @@ jobs:
       - heroku/install
       - heroku/deploy-via-git:
           post-steps:
-            - run: 
-              name: Migrate db
-              command: heroku run rake db:migrate --app $HEROKU_APP_NAME
+            - run: heroku run rake db:migrate --app $HEROKU_APP_NAME
 
 # We use workflows to orchestrate the jobs that we declared above.
 workflows:
