@@ -1,148 +1,127 @@
-version: 2.1
+version: 2.1 # Use 2.1 to enable using orbs and other features.
 
-executors:
-  default:
-    working_directory: ~/api_test
-    docker:
-      - image: circleci/ruby:2.7.2
-        environment:
+# Declare the orbs that we'll use in our config.
+# read more about orbs: https://circleci.com/docs/2.0/using-orbs/
+# orbs:
+#   ruby: circleci/ruby@1.0 
+orbs:
+  heroku: circleci/heroku@1.2.5
+
+references:
+  container_setup: &container_setup
+    docker: # run the steps with Docker
+      - image: circleci/ruby:2.7.2 # ...with this image as the primary container; this is where all `steps` will run
+        environment: # environment variables for primary container
           BUNDLE_JOBS: 3
-          BUNDLE_PATH: vendor/bundle
           BUNDLE_RETRY: 3
-          BUNDLER_VERSION: 2.0.1
-          RAILS_ENV: test
-          DB_HOST: 127.0.0.1
-          PG_HOST: 127.0.0.1
+          BUNDLE_PATH: vendor/bundle
+          PGHOST: 127.0.0.1
           PGUSER: postgres
-      - image: circleci/postgres:12.0
-        environment:
-          POSTGRES_DB: api_test_test
+          RAILS_ENV: test
+      - image: circleci/postgres:9.5-alpine # database image
+        environment: # environment variables for database
           POSTGRES_USER: postgres
+          POSTGRES_DB: api_test_test
+          POSTGRES_PASSWORD: postgres
 
-commands:
-  configure_bundler:
-    description: Configure bundler
-    steps:
-      - run:
-          name: Configure bundler
-          command: |
-            echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
-            source $BASH_ENV
-            gem install bundler
+  check_bundler_verson: &check_bundler_verson
+    run:
+      name: Which bundler?
+      command: bundle -v
+
+  run_specs: &run_specs
+    run:
+      name: Run rspec in parallel
+      command: |
+        bundle exec rspec --profile 10 \
+                          --format RspecJunitFormatter \
+                          --out test_results/rspec.xml \
+                          --format progress \
+                          $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
 
 jobs:
-  build:
-    executor: default
+  build: # our first job, named "build"
+    <<: *container_setup
     steps:
-      - checkout
-      # - restore_cache:
-      #     keys:
-      #       - api_test-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-      #       - api_test-
-      - configure_bundler
-      - run:
-          name: Install bundle
-          command: bundle install
+      - checkout # pull down our git code.
+      - *check_bundler_verson
+      - restore_cache:
+          keys:
+            - base-simulation-bundle-{{ checksum "Gemfile.lock" }}
+            - base-simulation-bundle
+
+      - run: # Install Ruby dependencies
+          name: Bundle Install
+          command: bundle check || bundle install
+      # Store bundle cache for Ruby dependencies
+      - save_cache:
+          key: base-simulation-bundle-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+  test:  # our next job, called "test"
+    # we run "parallel job containers" to enable speeding up our tests;
+    # this splits our tests across multiple containers.
+    parallelism: 3 
+    # here we set TWO docker images.
+    <<: *container_setup
+    steps:
+      - checkout 
+      - ruby/install-deps 
+      # Here we make sure that the secondary container boots 
+      # up before we run operations on the database.
       - run:
           name: Wait for DB
-          command: dockerize -wait tcp://127.0.0.1:5432 -timeout 1m
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
       - run:
-          name: Setup DB
-          command: bundle exec rails db:create db:schema:load --trace
-      - run:
-          name: DB migrations
-          command: bundle exec rails db:migrate
+          name: Database setup
+          command: bundle exec rails db:schema:load --trace
+      # Run rspec in parallel
       - run:
           name: RSpec
           command: |
             bundle exec rspec --profile 10 \
                               --format progress
 
-      - save_cache:
-          key: api_test-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-          paths:
-            - vendor/bundle
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - ./api_test
+  deploy: # our last job, called "deploy"
+    # we deploy app to heroku
+    docker: # run the steps with Docker
+      - image: circleci/ruby:2.7.2 # ...with this image as the primary container; this is where all `steps` will run
+        environment: # environment variables for primary container
+          BUNDLE_JOBS: 3
+          BUNDLE_RETRY: 3
+          BUNDLE_PATH: vendor/bundle
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          RAILS_ENV: test
+      - image: circleci/postgres:9.5-alpine # database image
+        environment: # environment variables for database
+          POSTGRES_USER: postgres
+          POSTGRES_DB:
+          POSTGRES_PASSWORD: ""
+    environment:
+      HEROKU_APP_NAME: $HEROKU_APP_NAME
+      HEROKU_API_KEY: $HEROKU_API_KEY
+    executor: heroku/default
+    steps:
+      - checkout
+      - heroku/install
+      - heroku/deploy-via-git
+      - run:
+          name: Migrate db
+          command: heroku run rake db:migrate --app $HEROKU_APP_NAME
 
+# We use workflows to orchestrate the jobs that we declared above.
 workflows:
   version: 2
-  integration:
-    jobs:
-      - build
-
-
-
-# version: 2.1 # Use 2.1 to enable using orbs and other features.
-
-# # Declare the orbs that we'll use in our config.
-# # read more about orbs: https://circleci.com/docs/2.0/using-orbs/
-# orbs:
-#   ruby: circleci/ruby@1.0 
-
-# jobs:
-#   build: # our first job, named "build"
-#     docker:
-#       - image: cimg/ruby:2.7-node # use a tailored CircleCI docker image.
-#         auth:
-#           username: $DOCKER_HUB_USERNAME
-#           password: $DOCKER_HUB_ACCESS_TOKEN  # context / project UI env-var reference
-#     steps:
-#       - checkout # pull down our git code.
-#       - ruby/install-deps # use the ruby orb to install dependencies
-#   test:  # our next job, called "test"
-#     # we run "parallel job containers" to enable speeding up our tests;
-#     # this splits our tests across multiple containers.
-#     parallelism: 3 
-#     # here we set TWO docker images.
-#     docker:
-#       - image: cimg/ruby:2.7-node # this is our primary docker image, where step commands run.
-#         auth:
-#           username: $DOCKER_HUB_USERNAME
-#           password: $DOCKER_HUB_ACCESS_TOKEN  # context / project UI env-var reference
-#       - image: circleci/postgres:9.5-alpine
-#         auth:
-#           username: $DOCKER_HUB_USERNAME
-#           password: $DOCKER_HUB_ACCESS_TOKEN  # context / project UI env-var reference
-#         environment: # add POSTGRES environment variables.
-#           POSTGRES_USER: postgres
-#           POSTGRES_DB: api_test_test
-#           POSTGRES_PASSWORD: postgres
-#     # environment variables specific to Ruby/Rails, applied to the primary container.
-#     environment:
-#       BUNDLE_JOBS: "3"
-#       BUNDLE_RETRY: "3"
-#       PGHOST: 127.0.0.1
-#       PGUSER: postgres
-#       PGPASSWORD: postgres
-#       RAILS_ENV: test
-#     # A series of steps to run, some are similar to those in "build".
-#     steps:
-#       - checkout 
-#       - ruby/install-deps 
-#       # Here we make sure that the secondary container boots 
-#       # up before we run operations on the database.
-#       - run:
-#           name: Wait for DB
-#           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-#       - run:
-#           name: Database setup
-#           command: bundle exec rails db:schema:load --trace
-#       # Run rspec in parallel
-#       - run:
-#           name: RSpec
-#           command: |
-#             bundle exec rspec --profile 10 \
-#                               --format progress
-
-# # We use workflows to orchestrate the jobs that we declared above.
-# workflows:
-#   version: 2
-#   build_and_test:     # The name of our workflow is "build_and_test"
-#     jobs:             # The list of jobs we run as part of this workflow.
-#       - build         # Run build first.
-#       - test:         # Then run test,
-#           requires:   # Test requires that build passes for it to run.
-#             - build   # Finally, run the build job.
+  build_and_test:     # The name of our workflow is "build_and_test"
+    jobs:             # The list of jobs we run as part of this workflow.
+      - build         # Run build first.
+      - test:         # Then run test,
+          requires:   # Test requires that build passes for it to run.
+            - build   # Finally, run the build job.
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
