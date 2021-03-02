@@ -101,8 +101,7 @@ jobs:
           POSTGRES_DB:
           POSTGRES_PASSWORD: ""
     environment:
-      HEROKU_APP_NAME: $HEROKU_APP_NAME
-      HEROKU_API_KEY: $HEROKU_API_KEY
+      HEROKU_APP_NAME: api-test-todo
     executor: heroku/default
     steps:
       - checkout
