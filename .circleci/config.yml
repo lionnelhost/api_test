@@ -122,4 +122,6 @@ workflows:
             - run: 
                 name: Migrate db
                 command: heroku run rake db:migrate --app $HEROKU_APP_NAME
+          requires:
+            - test
       
